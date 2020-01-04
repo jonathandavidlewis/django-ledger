@@ -1,17 +1,17 @@
 from django.contrib import admin
 
-from django_ledger.models import (LedgerModel, EntityModel, ChartOfAccountModel, AccountModel, CoAAccountAssignments,
-                                  JournalEntryModel, TransactionModel)
+from django_ledger.models import (LedgerModel, EntityModel, ChartOfAccountModel, AccountModel,
+                                  JournalEntryModel, TransactionModel, EntityManagementModel)
 
 
 class TransactionModelInLine(admin.TabularInline):
     model = TransactionModel
-    readonly_fields = [
-        'params'
-    ]
 
 
 class JournalEntryModelAdmin(admin.ModelAdmin):
+    readonly_fields = [
+        'ledger'
+    ]
     inlines = [
         TransactionModelInLine
     ]
@@ -20,31 +20,24 @@ class JournalEntryModelAdmin(admin.ModelAdmin):
         model = JournalEntryModel
 
 
+class EntityManagementInLine(admin.TabularInline):
+    model = EntityManagementModel
+
+
 class EntityModelAdmin(admin.ModelAdmin):
-    class Meta:
-        model = EntityModel
-
-
-class CoAAssignmentsInLine(admin.TabularInline):
-    model = CoAAccountAssignments
-
-
-class ChartOfAccountsModelAdmin(admin.ModelAdmin):
     inlines = [
-        CoAAssignmentsInLine
+        EntityManagementInLine
     ]
 
     class Meta:
-        model = CoAAccountAssignments
+        model = EntityModel
 
 
 class AccountModelAdmin(admin.ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
-
-    readonly_fields = [
-        'role_bs',
-        'role_bs_upper',
+    sortable_by = [
+        'code'
     ]
     list_display = [
         '__str__',
@@ -52,32 +45,35 @@ class AccountModelAdmin(admin.ModelAdmin):
         'parent'
     ]
     list_filter = [
-        'role_bs',
         'role',
         'balance_type',
     ]
-    fieldsets = (
-        ('Balance Sheet', {
-            'fields': (
-                'role_bs_upper',
-            )
-        }),
-        ('Account', {
-            'fields': (
-                ('code', 'name'),
-                'parent',
-                ('role', 'balance_type')
-            )
-        }),
-    )
 
     class Meta:
         model = AccountModel
 
-    def role_bs_upper(self, acc):
+    def role_bs(self, acc):
         return acc.role_bs.upper()
 
-    role_bs_upper.short_description = 'Balance Sheet Role'
+    role_bs.short_description = 'Balance Sheet Role'
+
+
+class AccountsModelInLine(admin.TabularInline):
+    model = AccountModel
+    readonly_fields = [
+        'role_bs',
+        'role',
+        'balance_type',
+    ]
+
+
+class ChartOfAccountsModelAdmin(admin.ModelAdmin):
+    inlines = [
+        AccountsModelInLine
+    ]
+
+    class Meta:
+        model = ChartOfAccountModel
 
 
 class LedgerModelAdmin(admin.ModelAdmin):

@@ -1,0 +1,62 @@
+{% load django_ledger %}
+
+<table class="table is-fullwidth">
+    <tr>
+        <th>Account Number</th>
+        <th>Description</th>
+        <th>Balance Type</th>
+        <th>Balance</th>
+    </tr>
+    <tr>
+        <td><h2 class="is-size-3">Income</h2></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    {% for acc in income %}
+        <tr>
+            <td>{{ acc.code }}</td>
+            <td>{{ acc.name }}</td>
+            <td>{{ acc.balance_type }}</td>
+            <td>${{ acc.balance | cs_thousands }}</td>
+        </tr>
+    {% endfor %}
+    <tr class="has-text-weight-bold">
+        <td>Total Income</td>
+        <td></td>
+        <td></td>
+        <td>${{ total_income | cs_thousands }}</td>
+    </tr>
+
+
+    <tr>
+        <td><h2 class="is-size-3">Expenses</h2></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    {% for acc in expenses %}
+        <tr>
+            <td>{{ acc.code }}</td>
+            <td>{{ acc.name }}</td>
+            <td>{{ acc.balance_type }}</td>
+            <td>${{ acc.balance | cs_thousands }}</td>
+        </tr>
+    {% endfor %}
+    <tr class="has-text-weight-bold">
+        <td>Total Expenses</td>
+        <td></td>
+        <td></td>
+        <td>${{ total_expenses | cs_thousands }}</td>
+    </tr>
+
+
+    <tr class="has-text-weight-bold">
+        <td>Total Income (Loss)</td>
+        <td></td>
+        <td></td>
+        <td>${{ total_income_loss | cs_thousands }}</td>
+    </tr>
+
+
+</table>

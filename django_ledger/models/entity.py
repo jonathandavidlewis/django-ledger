@@ -1,34 +1,41 @@
-from .mixins import CreateUpdateMixIn, SlugNameMixIn
-from django.db import models
-from django_ledger.models import LedgerModel
+from django.db.models.signals import pre_save, post_save
+from django.utils.translation import gettext as _
 
-
-class EntityModelAbstract(SlugNameMixIn,
-                          CreateUpdateMixIn):
-
-    coa = models.ForeignKey('django_ledger.ChartOfAccountModel',
-                            on_delete=models.DO_NOTHING,
-                            verbose_name='Chart of Accounts')
-
-    class Meta:
-        abstract = True
-
-    def __str__(self):
-        return '{x1} ({x2})'.format(x1=self.name,
-                                    x2=self.slug)
-
-    def get_ledgers(self, scope):
-        if scope not in [sc[0] for sc in LedgerModel.SCOPES]:
-            raise ValueError('Scope not valid')
-        return self.ledgers.filter(scope=scope)
-
+from django_ledger.models.coa import ChartOfAccountModel
+from django_ledger.models_abstracts.entity import EntityModelAbstract, EntityManagementModelAbstract
 
 
 class EntityModel(EntityModelAbstract):
     """
-    Final EntityModel from Abstracts
+    Entity Model Base Class From Abstract
     """
 
-    class Meta:
-        verbose_name = 'Entity'
-        verbose_name_plural = 'Entities'
+
+def entity_presave(sender, instance, **kwargs):
+    instance.clean()
+
+
+pre_save.connect(entity_presave, EntityModel)
+
+
+def entity_postsave(sender, instance, **kwargs):
+    if not getattr(instance, 'coa', None):
+        ChartOfAccountModel.objects.create(
+            slug=instance.slug + '-coa',
+            name=instance.name + ' CoA',
+            entity=instance
+        )
+    if getattr(instance, 'CREATE_GL_FLAG', False):
+        instance.ledgers.create(
+            name=_('General Ledger')
+        )
+        instance.CREATE_GL_FLAG = False
+
+
+post_save.connect(entity_postsave, EntityModel)
+
+
+class EntityManagementModel(EntityManagementModelAbstract):
+    """
+    EntityManagement Model Base Class From Abstract
+    """
